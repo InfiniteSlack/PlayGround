@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#071b26" />
+  <title>PELAGIC — Hold Fast</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main id="game-shell">
+    <canvas id="scene" aria-label="3D ocean survival game"></canvas>
+    <div class="grain"></div>
+    <header class="topbar">
+      <a class="wordmark" href="#" aria-label="Pelagic"><span class="mark">P</span><span>PELAGIC<span class="wordmark-sub">OPEN WATER / 01</span></span></a>
+      <div class="signal"><i></i><span>NO SIGNAL</span></div>
+      <button class="sound-button" id="sound-button" aria-label="Toggle sound">♪ <span>SOUND ON</span></button>
+    </header>
+    <section class="hud hidden" id="hud" aria-live="polite">
+      <div class="survival-card panel">
+        <div class="eyebrow">RESCUE ETA <span class="pulse-dot"></span></div>
+        <div class="timer" id="timer">02:00</div>
+        <div class="rescue-track"><span id="rescue-progress"></span></div>
+        <div class="tiny-row"><span>COAST GUARD BEACON</span><span id="beacon">SEARCHING</span></div>
+      </div>
+      <div class="threat-card panel">
+        <div class="threat-heading"><span class="eyebrow">THREAT LEVEL</span><span class="threat-state" id="threat-state">CIRCLING</span></div>
+        <div class="threat-bars" id="threat-bars"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="monster-name">THE <b>GLOAMJAW</b></div>
+      </div>
+      <div class="bottom-left panel status-card">
+        <div class="eyebrow">RAFT INTEGRITY</div><div class="hull-icons" id="hull-icons"><span>◆</span><span>◆</span><span>◆</span></div>
+        <div class="divider"></div>
+        <div class="eyebrow">HARPOON BOLTS <span class="ammo-count" id="ammo">05</span></div>
+        <div class="ammo-track" id="ammo-track"></div>
+      </div>
+      <div class="bottom-right instruction" id="instruction"><span class="keycap">CLICK</span> TO FIRE HARPOON <span class="instruction-divider">/</span> <span class="keycap">WASD</span> MOVE</div>
+      <div class="message-toast" id="toast"></div>
+      <div class="crosshair" id="crosshair"><span></span><i></i></div>
+    </section>
+    <div class="mobile-controls" id="mobile-controls">
+      <div class="stick-zone" id="stick-zone"><div class="stick" id="stick"></div></div>
+      <button class="fire-button" id="fire-button">FIRE <span>↗</span></button>
+    </div>
+    <section class="overlay intro-overlay" id="intro">
+      <div class="intro-content">
+        <div class="eyebrow intro-kicker"><span class="line"></span> A SURVIVAL STORY IN THE DEEP <span class="line"></span></div>
+        <h1>THE SEA<br>KEEPS <em>secrets.</em></h1>
+        <p class="intro-copy">Your raft is the only thing between you and the dark below.<br>Hold fast. Help is two minutes out.</p>
+        <div class="briefing">
+          <div><span class="brief-icon">⌁</span><span><b>THE GLOAMJAW</b><small>It circles before it strikes. Watch the water.</small></span></div>
+          <div><span class="brief-icon">↗</span><span><b>FIGHT BACK</b><small>Harpoon it when it surfaces. Scavenge drifting crates.</small></span></div>
+        </div>
+        <button class="start-button" id="start-button"><span>HOLD FAST</span><b>→</b></button>
+        <div class="controls-note"><span>WASD</span> MOVE <i>·</i> <span>MOUSE</span> AIM <i>·</i> <span>CLICK</span> FIRE</div>
+      </div>
+      <div class="intro-index">FIELD NOTE <b>07° 14′ N / 139° 42′ W</b><br>DEPTH UNKNOWN</div>
+      <div class="intro-side">PACIFIC OCEAN <span>—</span> 02:17 AM</div>
+    </section>
+    <section class="overlay end-overlay hidden" id="end-overlay">
+      <div class="end-content"><div class="eyebrow" id="end-kicker">SIGNAL ACQUIRED</div><h2 id="end-title">YOU MADE IT.</h2><p id="end-copy">The searchlight breaks through the dark. You're going home.</p><button class="start-button" id="restart-button"><span>PLAY AGAIN</span><b>→</b></button></div>
+    </section>
+    <div class="vignette"></div>
+  </main>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
