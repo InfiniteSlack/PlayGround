@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101c22">
+  <title>THOUGHTBOUND — A philosopher's journey</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,700;9..144,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <a class="wordmark" href="#" aria-label="Thoughtbound home"><span class="brand-mark">✳</span> THOUGHTBOUND</a>
+      <div class="chapter"><span class="chapter-dot"></span> FIELD NOTES <span class="chapter-sep">/</span> <b>THE MEADOW OF IDEAS</b></div>
+      <button class="sound-button" id="soundToggle" aria-label="Toggle sound">♫ <span>SOUND OFF</span></button>
+    </header>
+    <section class="game-layout">
+      <div class="world-column">
+        <div class="world-frame">
+          <canvas id="world" width="800" height="544" aria-label="Top-down world map"></canvas>
+          <div class="map-label"><span class="map-pin">⌖</span> THE MEADOW OF IDEAS <span class="map-coords">FIELD 01</span></div>
+          <div class="toast" id="toast" aria-live="polite"></div>
+          <div class="touch-controls" aria-label="Movement controls">
+            <button data-dir="up" aria-label="Move up">▲</button>
+            <div><button data-dir="left" aria-label="Move left">◀</button><button data-dir="down" aria-label="Move down">▼</button><button data-dir="right" aria-label="Move right">▶</button></div>
+          </div>
+        </div>
+        <div class="world-footer"><span><i class="keycap">WASD</i> or <i class="keycap">↑ ↓ ← →</i> MOVE</span><span><i class="keycap">E</i> TALK / CHALLENGE</span><span class="footer-note">A quiet mind can still make a strong argument.</span></div>
+      </div>
+      <aside class="sidebar">
+        <section class="journal-card">
+          <div class="eyebrow">YOUR JOURNAL <span class="journal-icon">▤</span></div>
+          <h1>A curious<br>kind of journey.</h1>
+          <p>Wander the meadow. Meet the great thinkers. Settle the questions that matter.</p>
+          <div class="quest-row"><span class="quest-check" id="questCheck">○</span><span id="questText">Choose your first philosopher</span><span class="quest-count" id="questCount">0 / 3</span></div>
+          <div class="quest-progress"><span id="questProgress"></span></div>
+        </section>
+        <section class="party-section">
+          <div class="section-heading"><span>YOUR THINKERS</span><span class="party-count" id="partyCount">—</span></div>
+          <div id="partyList" class="party-list"><div class="party-empty">Your ideas are waiting<br>to take shape.</div></div>
+        </section>
+        <div class="field-tip"><span class="tip-spark">✳</span><div><b>FIELD TIP</b><p id="tipText">Tall grass rustles with untamed ideas. Step inside to see what’s growing.</p></div></div>
+        <div class="sidebar-bottom"><span>DAY 01 <i>·</i> CLEAR SKIES</span><span id="insightCount">0 INSIGHT</span></div>
+      </aside>
+    </section>
+    <footer class="site-footer"><span>AN EXPEDITION THROUGH THE HISTORY OF IDEAS</span><span>✳ &nbsp;THINK DEEPLY. TRAVEL LIGHTLY.</span></footer>
+  </main>
+
+  <div class="overlay" id="introOverlay" role="dialog" aria-modal="true" aria-labelledby="introTitle">
+    <div class="intro-card">
+      <div class="intro-art"><div class="sun-disc"></div><span class="art-star s1">✳</span><span class="art-star s2">✦</span><span class="art-line"></span><div class="art-figure"><span></span></div><div class="art-hill hill-one"></div><div class="art-hill hill-two"></div><span class="art-caption">FIELD STUDY Nº 01</span></div>
+      <div class="intro-copy"><div class="eyebrow">A FIELD GUIDE TO BIG QUESTIONS</div><h2 id="introTitle">Every great idea<br>starts somewhere.</h2><p>The Meadow of Ideas is alive with thinkers. Choose a companion, explore the paths, and test your wits in a friendly debate.</p><div class="starter-label">CHOOSE YOUR FIRST THINKER</div><div class="starter-options" id="starterOptions"></div><div class="intro-controls"><span>MOVE <kbd>WASD</kbd> / <kbd>↑↓←→</kbd> &nbsp; TALK <kbd>E</kbd></span><button class="primary-button" id="beginButton" disabled>BEGIN YOUR JOURNEY <span>↗</span></button></div></div>
+    </div>
+  </div>
+
+  <div class="overlay battle-overlay" id="battleOverlay" role="dialog" aria-modal="true" aria-labelledby="battleTitle" hidden>
+    <section class="battle-card">
+      <header class="battle-header"><div><div class="eyebrow">A FRIENDLY DEBATE</div><h2 id="battleTitle">A meeting of minds</h2></div><button class="close-button" id="battleClose" aria-label="Close battle">×</button></header>
+      <div class="battle-arena" id="battleArena"><div class="arena-sun"></div><div class="arena-orbit"></div><div class="arena-side foe-side"><div class="arena-sprite" id="foeSprite">?</div><div class="arena-name" id="foeName">THE THINKER</div><div class="hp-track"><span id="foeHp"></span></div><div class="hp-caption" id="foeHpText">100 / 100</div></div><div class="arena-side hero-side"><div class="arena-sprite" id="heroSprite">?</div><div class="arena-name" id="heroName">YOUR THINKER</div><div class="hp-track"><span id="heroHp"></span></div><div class="hp-caption" id="heroHpText">100 / 100</div></div><div class="arena-versus">VS</div></div>
+      <div class="battle-message" id="battleMessage" aria-live="polite">A new question takes shape…</div>
+      <div class="battle-content" id="battleContent"></div>
+      <div class="battle-footer"><span><i class="keycap">1–4</i> CHOOSE AN ARGUMENT</span><span class="debate-note">Listen closely. Every thinker has a different way.</span></div>
+    </section>
+  </div>
+  <div class="overlay ending-overlay" id="endingOverlay" role="dialog" aria-modal="true" hidden><div class="ending-card"><div class="ending-stamp">✳</div><div class="eyebrow">FIELD STUDY COMPLETE</div><h2>Look how far<br>your thoughts have wandered.</h2><p>You’ve brought three great minds together. The meadow feels a little brighter for it.</p><div class="ending-stats" id="endingStats"></div><button class="primary-button" id="continueButton">KEEP EXPLORING <span>↗</span></button></div></div>
+  <script src="game.js"></script>
+</body>
+</html>
