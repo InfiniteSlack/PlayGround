@@ -34,6 +34,7 @@
   let tiles = [], player = {x:12,y:14,dir:'down',moving:false,frame:0};
   let party = [], activeIndex = 0, selectedStarter = null, battle = null, toastTimer, lastMove=0;
   let gameStarted = false, encounterCount = 0, insight = 0, audioOn=false, ac=null, gameWon=false;
+  let starterFocus = 0, battleFocus = 0, previousPadButtons = [], previousPadDirection = '', padDirectionSince = 0, padDirectionRepeatAt = 0;
   const $ = s => document.querySelector(s);
   function seedMap(){
     tiles = Array.from({length:ROWS},(_,y)=>Array.from({length:COLS},(_,x)=>{
@@ -84,7 +85,39 @@
     ctx.fillStyle='#f0ead4';ctx.fillRect(px-5,py+3,10,2);
     if(!isPlayer){ctx.fillStyle='#fff9df';ctx.beginPath();ctx.arc(px+10,py-14,6,0,Math.PI*2);ctx.fill();ctx.fillStyle='#839568';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.fillText('!',px+10,py-11)}
   }
+  function pollGamepad(){
+    const pad=navigator.getGamepads?.()[0];
+    if(!pad){previousPadButtons=[];previousPadDirection='';padDirectionSince=0;padDirectionRepeatAt=0;return}
+    const buttons=pad.buttons.map(button=>button.pressed||button.value>.5);
+    const justPressed=index=>buttons[index]&&!previousPadButtons[index];
+    let direction='';
+    if(buttons[12])direction='up';else if(buttons[13])direction='down';else if(buttons[14])direction='left';else if(buttons[15])direction='right';
+    const x=pad.axes[0]||0,y=pad.axes[1]||0;
+    if(!direction&&Math.max(Math.abs(x),Math.abs(y))>.55)direction=Math.abs(x)>Math.abs(y)?(x<0?'left':'right'):(y<0?'up':'down');
+    const now=Date.now();
+    let directionPressed=false;
+    if(direction!==previousPadDirection){padDirectionSince=now;padDirectionRepeatAt=now;directionPressed=Boolean(direction)}
+    else if(direction&&now-padDirectionSince>350&&now-padDirectionRepeatAt>170){directionPressed=true;padDirectionRepeatAt=now}
+    if(!direction){padDirectionSince=0;padDirectionRepeatAt=0}
+    if(!$('#introOverlay').hidden){
+      if(directionPressed){starterFocus=(starterFocus+(direction==='up'||direction==='left'?-1:1)+starterKeys.length)%starterKeys.length;updateStarterFocus()}
+      if(justPressed(0)){if(selectedStarter===starterKeys[starterFocus])startGame();else selectStarter(starterFocus)}
+    }else if(!$('#endingOverlay').hidden){
+      if(justPressed(0)||justPressed(9))$('#continueButton').click();
+    }else if(battle){
+      if(!battle.done&&directionPressed){battleFocus=(battleFocus+(direction==='up'||direction==='left'?-1:1)+moveMeta.length)%moveMeta.length;renderBattle()}
+      if(justPressed(0)){if(battle.done)finishBattle();else playMove(battleFocus)}
+      if(justPressed(1)&&battle.done)finishBattle();
+      [2,3,4,5].forEach((button,i)=>{if(justPressed(button)&&!battle.done)playMove(i)})
+    }else if(gameStarted){
+      if(direction)move(direction);
+      if(justPressed(0))interact();
+      if(justPressed(4)||justPressed(5)){if(party.length>1){activeIndex=(activeIndex+(justPressed(5)?1:-1)+party.length)%party.length;updateSidebar();showToast(`${party[activeIndex].key} is ready to think.`)}}
+    }
+    previousPadButtons=buttons;previousPadDirection=direction;
+  }
   function renderWorld(){
+    pollGamepad();
     ctx.clearRect(0,0,canvas.width,canvas.height);
     for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)drawTile(x,y,tiles[y][x]);
     // An old stone circle, a thought-tree and fallen leaves.
@@ -105,7 +138,9 @@
     } else {player.frame++} }
   function showToast(text){const el=$('#toast');el.textContent=text;el.classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('visible'),1900)}
   function interact(){if(!gameStarted||battle)return;const t=nearbyTrainer();if(t){showToast(t.line);setTimeout(()=>{if(!battle)startBattle(t.key,t)},320);return}if(tiles[player.y][player.x]==='tall'){startBattle(['Plato','Diogenes','Epicurus'][Math.floor(Math.random()*3)],null,true);return}showToast('A quiet meadow. Wander until a thinker catches your eye.')}
-  function initStarterOptions(){const root=$('#starterOptions');root.innerHTML='';starterKeys.forEach(key=>{const t=thinkers[key],c=colors[key];const button=document.createElement('button');button.className='starter-option';button.type='button';button.innerHTML=`<span class="starter-emoji" style="background:${c.pale};color:${c.accent}">${c.icon}</span><span class="starter-desc"><span class="starter-name">${t.name}</span><span class="starter-phil">${c.tag} · ${t.desc}</span></span><span class="starter-glyph">↗</span>`;button.addEventListener('click',()=>{selectedStarter=key;document.querySelectorAll('.starter-option').forEach(b=>b.classList.remove('selected'));button.classList.add('selected');$('#beginButton').disabled=false});root.appendChild(button)})}
+  function updateStarterFocus(){document.querySelectorAll('.starter-option').forEach((button,i)=>button.classList.toggle('controller-focus',i===starterFocus))}
+  function selectStarter(index){starterFocus=index;selectedStarter=starterKeys[index];document.querySelectorAll('.starter-option').forEach((button,i)=>button.classList.toggle('selected',i===index));$('#beginButton').disabled=false}
+  function initStarterOptions(){const root=$('#starterOptions');root.innerHTML='';starterKeys.forEach((key,index)=>{const t=thinkers[key],c=colors[key];const button=document.createElement('button');button.className='starter-option';button.type='button';button.innerHTML=`<span class="starter-emoji" style="background:${c.pale};color:${c.accent}">${c.icon}</span><span class="starter-desc"><span class="starter-name">${t.name}</span><span class="starter-phil">${c.tag} · ${t.desc}</span></span><span class="starter-glyph">↗</span>`;button.addEventListener('mouseenter',()=>{starterFocus=index;updateStarterFocus()});button.addEventListener('click',()=>selectStarter(index));root.appendChild(button)});updateStarterFocus()}
   function startGame(){if(!selectedStarter)return;gameStarted=true;party=[{key:selectedStarter,hp:thinkers[selectedStarter].hp,maxHp:thinkers[selectedStarter].hp,xp:0}];$('#introOverlay').hidden=true;updateSidebar();showToast(`${selectedStarter} joins your expedition. Find the thinkers marked !`);}
   function updateSidebar(){
     $('#partyCount').textContent=party.length?String(party.length).padStart(2,'0')+' / 04':'—';
@@ -114,11 +149,11 @@
     const wins=trainers.filter(t=>t.done).length;$('#questCount').textContent=`${wins} / 3`;$('#questProgress').style.width=`${Math.min(100,wins/3*100)}%`;$('#questCheck').textContent=wins>=3?'✓':'○';$('#questText').textContent=wins>=3?'Bring three thinkers together':party.length?'Meet the thinkers of the meadow':'Choose your first philosopher';$('#insightCount').textContent=`${insight} INSIGHT${insight===1?'':'S'}`;
     if(wins>=3&&!gameWon){gameWon=true}
   }
-  function startBattle(key,trainer,wild=false){if(!party.length)return;const foe=thinkers[key];battle={key,trainer,wild,foeHp:foe.hp,foeMax:foe.hp,hero:party[activeIndex],guard:0,healed:false,turn:0,done:false};$('#battleTitle').textContent=trainer?`A meeting with ${foe.name}`:'A wild idea appears';$('#foeName').textContent=foe.name.toUpperCase();$('#heroName').textContent=battle.hero.key.toUpperCase();$('#foeSprite').textContent=colors[key].icon;$('#foeSprite').style.background=colors[key].pale;$('#foeSprite').style.color=colors[key].accent;const heroStyle=colors[battle.hero.key];$('#heroSprite').textContent=heroStyle.icon;$('#heroSprite').style.background=heroStyle.pale;$('#heroSprite').style.color=heroStyle.accent;$('#battleMessage').textContent=trainer?trainer.line:`A wild ${foe.name} has a question for you.`;$('#battleOverlay').hidden=false;renderBattle();sound(440,.07)}
+  function startBattle(key,trainer,wild=false){if(!party.length)return;const foe=thinkers[key];battleFocus=0;battle={key,trainer,wild,foeHp:foe.hp,foeMax:foe.hp,hero:party[activeIndex],guard:0,healed:false,turn:0,done:false};$('#battleTitle').textContent=trainer?`A meeting with ${foe.name}`:'A wild idea appears';$('#foeName').textContent=foe.name.toUpperCase();$('#heroName').textContent=battle.hero.key.toUpperCase();$('#foeSprite').textContent=colors[key].icon;$('#foeSprite').style.background=colors[key].pale;$('#foeSprite').style.color=colors[key].accent;const heroStyle=colors[battle.hero.key];$('#heroSprite').textContent=heroStyle.icon;$('#heroSprite').style.background=heroStyle.pale;$('#heroSprite').style.color=heroStyle.accent;$('#battleMessage').textContent=trainer?trainer.line:`A wild ${foe.name} has a question for you.`;$('#battleOverlay').hidden=false;renderBattle();sound(440,.07)}
   const moveMeta=[{name:'Logos',icon:'⌁',detail:'A clear, reasoned argument',power:'STEADY'},{name:'Dialectic',icon:'⇄',detail:'Guard, then turn the question',power:'COUNTER'},{name:'Paradox',icon:'✳',detail:'Risk everything for a bold idea',power:'RISKY'},{name:'Meditate',icon:'◌',detail:'Restore a little composure',power:'RESTORE'}];
   function renderBattle(){if(!battle)return;const hero=battle.hero;$('#heroHp').style.width=`${Math.max(0,100*hero.hp/hero.maxHp)}%`;$('#foeHp').style.width=`${Math.max(0,100*battle.foeHp/battle.foeMax)}%`;$('#heroHpText').textContent=`${Math.max(0,hero.hp)} / ${hero.maxHp}`;$('#foeHpText').textContent=`${Math.max(0,battle.foeHp)} / ${battle.foeMax}`;$('#heroHp').style.background=hero.hp<30?'#d17f70':'#719366';const content=$('#battleContent');if(battle.done){content.innerHTML=`<div class="result-panel"><p>${battle.resultText}</p><button class="primary-button" id="battleContinue">${battle.won?'CONTINUE':'TRY ANOTHER THINKER'} <span>↗</span></button></div>`;$('#battleContinue').onclick=finishBattle;return}
     content.innerHTML=`<div class="move-grid">${moveMeta.map((m,i)=>`<button class="move-button" data-move="${i}" ${i===3&&battle.healed?'disabled':''}><span class="move-symbol">${m.icon}</span><span class="move-meta"><span class="move-name">${m.name}</span><span class="move-detail">${i===0?thinkers[hero.key].moves[0]+': '+m.detail:m.detail}</span></span><span class="move-power">${i===3&&battle.healed?'USED':m.power}</span></button>`).join('')}</div>`;
-    document.querySelectorAll('.move-button').forEach(btn=>{btn.addEventListener('click',()=>playMove(Number(btn.dataset.move)))});
+    document.querySelectorAll('.move-button').forEach(btn=>{const index=Number(btn.dataset.move);btn.classList.toggle('controller-focus',index===battleFocus);btn.addEventListener('click',()=>playMove(index))});
   }
   function playMove(index){if(!battle||battle.done)return;const b=battle,hero=thinkers[b.hero.key],foe=thinkers[b.key];let damage=0,message='';
     if(index===0){damage=Math.round(hero.attack*(.85+Math.random()*.32));message=`${hero.name} makes a ${hero.moves[0]} argument. It lands for ${damage} insight!`;}
@@ -134,7 +169,7 @@
   function finishBattle(){if(!battle)return;const won=battle.won,trainer=battle.trainer;$('#battleOverlay').hidden=true;battle=null;if(won&&trainer&&trainers.filter(t=>t.done).length>=3){showToast('Three thinkers have joined your journey!')}else if(!won)showToast('Your thinker is recovering. Choose another from your party.');if(won)party.forEach(m=>{m.hp=m.maxHp});updateSidebar();if(gameWon&&won)showEnding()}
   function showEnding(){$('#endingStats').innerHTML=`<span><b>${trainers.filter(t=>t.done).length}</b>GREAT MINDS</span><span><b>${party.length}</b>IN YOUR PARTY</span><span><b>${insight}</b>INSIGHT</span>`;$('#endingOverlay').hidden=false}
   function sound(freq,duration){if(!audioOn)return;try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const osc=ac.createOscillator(),gain=ac.createGain();osc.frequency.value=freq;osc.type='sine';gain.gain.setValueAtTime(.035,ac.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ac.currentTime+duration);osc.connect(gain);gain.connect(ac.destination);osc.start();osc.stop(ac.currentTime+duration)}catch(_){}}
-  document.addEventListener('keydown',e=>{if($('#introOverlay').hidden===false){if(e.key==='Enter'&&!$('#beginButton').disabled)startGame();return}if(battle){if(['1','2','3','4'].includes(e.key))playMove(Number(e.key)-1);if(e.key==='Escape'&&battle.done)finishBattle();return}const key=e.key.toLowerCase();if(['arrowup','w'].includes(key)){e.preventDefault();move('up')}else if(['arrowdown','s'].includes(key)){e.preventDefault();move('down')}else if(['arrowleft','a'].includes(key)){e.preventDefault();move('left')}else if(['arrowright','d'].includes(key)){e.preventDefault();move('right')}else if(key==='e'||key===' '){e.preventDefault();interact()}});
+  document.addEventListener('keydown',e=>{if($('#introOverlay').hidden===false){if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();starterFocus=(starterFocus+(e.key==='ArrowUp'||e.key==='ArrowLeft'?-1:1)+starterKeys.length)%starterKeys.length;updateStarterFocus()}else if(e.key==='Enter'){if(selectedStarter===starterKeys[starterFocus])startGame();else selectStarter(starterFocus)}return}if(!$('#endingOverlay').hidden){if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#continueButton').click()}return}if(battle){if(['ArrowUp','ArrowLeft','ArrowDown','ArrowRight'].includes(e.key)&&!battle.done){e.preventDefault();battleFocus=(battleFocus+(e.key==='ArrowUp'||e.key==='ArrowLeft'?-1:1)+moveMeta.length)%moveMeta.length;renderBattle()}else if(e.key==='Enter'&&!battle.done)playMove(battleFocus);else if(['1','2','3','4'].includes(e.key))playMove(Number(e.key)-1);if(e.key==='Escape'&&battle.done)finishBattle();return}const key=e.key.toLowerCase();if(['arrowup','w'].includes(key)){e.preventDefault();move('up')}else if(['arrowdown','s'].includes(key)){e.preventDefault();move('down')}else if(['arrowleft','a'].includes(key)){e.preventDefault();move('left')}else if(['arrowright','d'].includes(key)){e.preventDefault();move('right')}else if(key==='e'||key===' '){e.preventDefault();interact()}});
   document.querySelectorAll('.touch-controls button').forEach(btn=>{const dir=btn.dataset.dir;btn.addEventListener('pointerdown',e=>{e.preventDefault();move(dir)});btn.addEventListener('touchstart',e=>{e.preventDefault();move(dir)},{passive:false})});
   $('#beginButton').addEventListener('click',startGame);$('#battleClose').addEventListener('click',()=>{if(battle?.done)finishBattle();else showToast('Finish the debate before you go.')});$('#continueButton').addEventListener('click',()=>{$('#endingOverlay').hidden=true;showToast('The meadow still has more questions.')});$('#soundToggle').addEventListener('click',()=>{audioOn=!audioOn;$('#soundToggle').innerHTML=`♫ <span>SOUND ${audioOn?'ON':'OFF'}</span>`;if(audioOn)sound(540,.11)});
   seedMap();initStarterOptions();renderWorld();
