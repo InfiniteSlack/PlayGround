@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#100d18">
+  <link rel="icon" href="data:,">
+  <title>Velvet Knockout — After Hours at the Grand</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Velvet Knockout home"><span class="brand-mark">V</span><span>VELVET <b>KNOCKOUT</b></span></a>
+      <div class="top-center"><span class="live-dot"></span> THE GRAND • NIGHT SHOW</div>
+      <button class="icon-button" id="sound-toggle" aria-label="Toggle sound" title="Sound on/off">♫</button>
+    </header>
+
+    <section class="game-frame" aria-label="Velvet Knockout fighting game">
+      <div class="hud">
+        <div class="fighter-hud left-hud">
+          <div class="fighter-name"><span class="player-tag">P1</span><span id="player-name">VIOLET VICE</span></div>
+          <div class="health-track"><div class="health-fill player-health" id="player-health"></div><span class="health-glint"></span></div>
+          <div class="meter-track"><div class="meter-fill" id="player-meter"></div></div>
+          <div class="hud-meta"><span id="player-wins">ROUND WINS  ◇ ◇</span><span>THE HEADLINER</span></div>
+        </div>
+        <div class="round-display"><div class="round-label">ROUND</div><div class="round-number" id="round-number">01</div><div class="timer" id="timer">99</div></div>
+        <div class="fighter-hud right-hud">
+          <div class="fighter-name"><span id="enemy-name">MADAME NOIR</span><span class="player-tag enemy-tag">CPU</span></div>
+          <div class="health-track"><div class="health-fill enemy-health" id="enemy-health"></div><span class="health-glint"></span></div>
+          <div class="meter-track enemy-meter-track"><div class="meter-fill enemy-meter" id="enemy-meter"></div></div>
+          <div class="hud-meta"><span>THE HOUSE FAVORITE</span><span id="enemy-wins">ROUND WINS  ◇ ◇</span></div>
+        </div>
+      </div>
+      <div class="arena-wrap">
+        <canvas id="arena" aria-label="Fighting arena"></canvas>
+        <div class="round-callout" id="round-callout"><span>VELVET KNOCKOUT</span><strong>READY?</strong><small>STEP INTO THE SPOTLIGHT</small></div>
+        <div class="toast" id="toast" aria-live="polite"></div>
+        <div class="mobile-controls" id="mobile-controls">
+          <div class="dpad">
+            <button data-control="left" aria-label="Move left">◀</button><button data-control="jump" aria-label="Jump">▲</button><button data-control="right" aria-label="Move right">▶</button>
+          </div>
+          <div class="action-pad"><button class="touch-light" data-control="light">JAB</button><button class="touch-heavy" data-control="heavy">HEEL</button><button class="touch-special" data-control="special">GLOW</button><button class="touch-block" data-control="block">GUARD</button></div>
+        </div>
+      </div>
+      <div class="arena-footer">
+        <div class="stage-caption"><span class="equalizer"><i></i><i></i><i></i></span><span>HOUSE OF VELVET</span><span class="caption-divider">/</span><span>ROUND <b id="footer-round">01</b></span></div>
+        <div class="match-status" id="match-status">BEST OF THREE <span>•</span> FIRST TO TWO</div>
+        <button class="pause-button" id="pause-button" aria-label="Pause game">Ⅱ <span>PAUSE</span></button>
+      </div>
+    </section>
+
+    <section class="below-game">
+      <div class="roster-panel">
+        <div class="section-kicker">PICK YOUR HEADLINER <span>01 — 03</span></div>
+        <div class="roster" id="roster">
+          <button class="roster-card selected" data-character="violet" aria-label="Select Violet Vice"><span class="roster-swatch violet-swatch">V</span><span><b>VIOLET VICE</b><small>THE SHOWSTOPPER</small></span><span class="select-mark">✦</span></button>
+          <button class="roster-card" data-character="ruby" aria-label="Select Ruby Riot"><span class="roster-swatch ruby-swatch">R</span><span><b>RUBY RIOT</b><small>THE WILDCARD</small></span><span class="select-mark">✦</span></button>
+          <button class="roster-card" data-character="jade" aria-label="Select Jade Jett"><span class="roster-swatch jade-swatch">J</span><span><b>JADE JETT</b><small>THE ACE</small></span><span class="select-mark">✦</span></button>
+        </div>
+      </div>
+      <div class="controls-panel">
+        <div class="section-kicker">HOW TO STEAL THE SHOW <span>INPUT GUIDE</span></div>
+        <div class="control-list"><span><kbd>A</kbd><kbd>D</kbd> MOVE</span><span><kbd>W</kbd> JUMP</span><span><kbd>J</kbd> JAB</span><span><kbd>K</kbd> HEEL</span><span><kbd>L</kbd> GLOW</span><span><kbd>SPACE</kbd> GUARD</span></div>
+        <div class="controller-note">🎮 GAMEPAD READY <i>•</i> LEFT STICK / D-PAD TO MOVE · X / A / B TO ATTACK</div>
+      </div>
+    </section>
+    <footer class="site-footer"><span>ALL FIGHTERS ARE ADULTS. ALL GLAMOUR, ALL GRIT.</span><span>✦ &nbsp; NO BACKUP DANCERS REQUIRED &nbsp; ✦</span></footer>
+
+    <div class="modal-screen" id="modal-screen">
+      <div class="modal-card" id="modal-card">
+        <div class="modal-eyebrow"><span>TONIGHT'S MAIN EVENT</span><i>✦</i><span>EST. AFTER DARK</span></div>
+        <div class="modal-title">VELVET<br><em>KNOCKOUT</em></div>
+        <p class="modal-copy">A little sparkle. A lot of swing.<br>Take the spotlight at the House of Velvet.</p>
+        <div class="modal-actions"><button class="primary-button" id="start-button">TAKE THE STAGE <span>↗</span></button><button class="secondary-button" id="versus-button">LOCAL VERSUS</button></div>
+        <div class="modal-foot"><span>BEST OF THREE</span><span>◆</span><span>ARCADE FIGHTER</span></div>
+      </div>
+    </div>
+    <div class="screen-flash" id="screen-flash"></div>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
